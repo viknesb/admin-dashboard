@@ -1,0 +1,62 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.apache.airavata</groupId>
+  <artifactId>admin-dashboard</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>war</packaging>
+  <name>Admin Monitoring Dashboard</name>
+  <description>A WebApp for admins to monitor and debug workflows</description>
+  
+  <properties>
+  	<war.plugin.version>2.1.1</war.plugin.version>
+  	<cargo.version>1.3.1</cargo.version>	
+  </properties>
+  <build>
+		<finalName>admin-dashboard</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>${war.plugin.version}</version>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.cargo</groupId>
+				<artifactId>cargo-maven2-plugin</artifactId>
+				<version>${cargo.version}</version>
+				<configuration>
+					<wait>true</wait>
+					<configuration>
+						<properties>
+							<cargo.servlet.port>8080</cargo.servlet.port>
+							<cargo.protocol>http</cargo.protocol>
+							<cargo.jvmargs>
+                                <![CDATA[-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n -noverify]]>
+							</cargo.jvmargs>
+							<cargo.tomcat.context.reloadable>true</cargo.tomcat.context.reloadable>
+						</properties>
+						<home>${project.build.directory}/tomcat7x</home>
+					</configuration>
+					<container>
+						<containerId>tomcat7x</containerId>
+						<timeout>180000</timeout>
+						<zipUrlInstaller>
+							<url>
+								http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.16/bin/apache-tomcat-7.0.16.zip
+							</url>
+						</zipUrlInstaller>
+					</container>
+					<deployables>
+						<deployable>
+							<groupId>com.apache.airavata</groupId>
+							<artifactId>admin-dashboard</artifactId>
+							<type>war</type>
+							<properties>
+								<context>/admin</context>
+							</properties>
+						</deployable>
+					</deployables>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
