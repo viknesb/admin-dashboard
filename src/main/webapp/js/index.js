@@ -41,7 +41,8 @@ function EditCtrl($scope) {
 function CreateCtrl($scope) {
 	
 }
-$(document).ready(function() {
+
+/*$(document).ready(function() {
 	
 	// Custom Google Search
 	(function() {
@@ -54,4 +55,4 @@ $(document).ready(function() {
 	    var s = document.getElementsByTagName('script')[0];
 	    s.parentNode.insertBefore(gcse, s);
 	})();
-});
+});*/
