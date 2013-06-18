@@ -11,11 +11,11 @@
 		</thead>
 		<tbody>
 		<tr ng-repeat="experiment in experiments">
-			<td>{{experiment.experimentId}}</td>
-			<td>{{experiment.gateway.gatewayName}}</td>
-			<td>{{experiment.project.projectName}}</td>
+			<td>{{experiment.id}}</td>
+			<td>{{experiment.gatewayName}}</td>
+			<td>{{experiment.projectName}}</td>
 			<td>{{experiment.submittedDate}}</td>
-			<td>{{experiment.user.userName}}</td>
+			<td>{{experiment.username}}</td>
 		</tbody>
 	</table>
 </div>

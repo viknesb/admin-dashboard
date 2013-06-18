@@ -55,12 +55,23 @@ function ExpCtrl($scope, $http, Base64) {
 	$http({method:"GET", url:"http://localhost:8080/airavata-registry/api/experimentregistry/get/experiments/all",
 		cache : false}).
 	success(function(data,status) {
-		$scope.experiments = data.experiments;
-		console.log(data);
+		var getExperiments = function(data) {
+			var experiments = [];
+			for (var item in data.experiments) {
+				var experiment = {};
+				experiment.id = data.experiments[item].experimentId;
+				experiment.gatewayName = data.experiments[item].gateway.gatewayName;
+				experiment.projectName = data.experiments[item].project.projectName;
+				experiment.submittedDate = new Date(data.experiments[item].submittedDate).toLocaleString();
+				experiment.username = data.experiments[item].user.userName;
+				experiments.push(experiment);
+			}
+			return experiments;
+		};
+		$scope.experiments = getExperiments(data);
 	}).
 	error(function(data,status) {
 		console.log("Error fetching experiments data !");
-		console.log(data);
 	});
 }
 
