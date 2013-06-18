@@ -6,6 +6,7 @@ app.config(['$httpProvider','$routeProvider' ,function($httpProvider, $routeProv
 	$routeProvider.
 	when('/', {controller:HomeCtrl, templateUrl:'home.html'}).
 	when('/edit/:projectId', {controller:EditCtrl, templateUrl:'detail.html'}).
+	when('/experiments', {controller:ExpCtrl, templateUrl:'experiments.html'}).
 	when('/workflows', {controller:CreateCtrl, templateUrl:'detail.html'}).
 	otherwise({redirectTo:'/'});
 }]);
@@ -41,23 +42,26 @@ app.directive("adminboard", function() {
 
 function HomeCtrl($scope, $http, Base64) {
 
-	$http.defaults.headers.common.Authorization = make_base_auth("admin","admin", Base64);
-	$http({method:"GET", url:"http://localhost:8080/airavata-registry/api/experimentregistry/get/experiments/all",
-		cache : false}).
-	success(function(data,status) {
-		console.log("success");
-		console.log(data);
-		console.log("hi");
-	}).
-	error(function(data,status) {
-		console.log("error");
-		console.log(data);
-	});
-	
+
 }
 
 function EditCtrl($scope) {
 	
+}
+
+function ExpCtrl($scope, $http, Base64) {
+	
+	$http.defaults.headers.common.Authorization = make_base_auth("admin","admin", Base64);
+	$http({method:"GET", url:"http://localhost:8080/airavata-registry/api/experimentregistry/get/experiments/all",
+		cache : false}).
+	success(function(data,status) {
+		$scope.experiments = data.experiments;
+		console.log(data);
+	}).
+	error(function(data,status) {
+		console.log("Error fetching experiments data !");
+		console.log(data);
+	});
 }
 
 function CreateCtrl($scope) {
@@ -153,18 +157,3 @@ angular.module("encoder",[]).factory('Base64', function() {
         }
     };
 });
-
-/*$(document).ready(function() {
-	
-	// Custom Google Search
-	(function() {
-	    var cx = '001303010279189643848:_pem515tnrk';
-	    var gcse = document.createElement('script');
-	    gcse.type = 'text/javascript';
-	    gcse.async = true;
-	    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
-	        '//www.google.com/cse/cse.js?cx=' + cx;
-	    var s = document.getElementsByTagName('script')[0];
-	    s.parentNode.insertBefore(gcse, s);
-	})();
-});*/
