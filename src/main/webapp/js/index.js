@@ -7,7 +7,8 @@ app.config(['$httpProvider','$routeProvider' ,function($httpProvider, $routeProv
 	when('/', {controller:HomeCtrl, templateUrl:'home.html'}).
 	when('/edit/:projectId', {controller:EditCtrl, templateUrl:'detail.html'}).
 	when('/experiments', {controller:ExpCtrl, templateUrl:'experiments.html'}).
-	when('/workflows', {controller:CreateCtrl, templateUrl:'detail.html'}).
+	when('/projects', {controller:ProjectCtrl, templateUrl:'projects.html'}).
+	when('/workflows', {controller:WorkflowCtrl, templateUrl:'workflows.html'}).
 	otherwise({redirectTo:'/'});
 }]);
 
@@ -75,8 +76,55 @@ function ExpCtrl($scope, $http, Base64) {
 	});
 }
 
-function CreateCtrl($scope) {
+function ProjectCtrl($scope, $http, Base64) {
 	
+	$http.defaults.headers.common.Authorization = make_base_auth("admin","admin", Base64);
+	$http({method:"GET", url:"http://localhost:8080/airavata-registry/api/projectregistry/get/projects",
+		cache : false}).
+	success(function(data,status) {
+		var getProjects = function(data) {
+			var projects = [];
+			for (var item in data.workspaceProjects) {
+				var project = {};
+				project.gatewayName = data.workspaceProjects[item].gateway.gatewayName;
+				project.projectName = data.workspaceProjects[item].projectName;
+				project.username = data.workspaceProjects[item].airavataUser.userName;
+				projects.push(project);
+			}
+			return projects;
+		};
+		$scope.projects = getProjects(data);
+	}).
+	error(function(data,status) {
+		console.log("Error fetching projects data !");
+	});
+}
+
+function WorkflowCtrl($scope, $http, Base64) {
+	
+	$http.defaults.headers.common.Authorization = make_base_auth("admin","admin", Base64);
+	$http({method:"GET", url:"http://localhost:8080/airavata-registry/api/userwfregistry/get/workflows",
+		cache : false}).
+	success(function(data,status) {
+		console.log(data);
+		var getWorkflows = function(data) {
+			var workflows = [];
+			for (var item in data.workflows) {
+				var workflow = {};
+				workflow.id = data.experiments[item].experimentId;
+				workflow.gatewayName = data.experiments[item].gateway.gatewayName;
+				workflow.projectName = data.experiments[item].project.projectName;
+				workflow.submittedDate = new Date(data.experiments[item].submittedDate).toLocaleString();
+				workflow.username = data.experiments[item].user.userName;
+				workflows.push(workflow);
+			}
+			return workflows;
+		};
+		$scope.experiments = getWorkflows(data);
+	}).
+	error(function(data,status) {
+		console.log("Error fetching experiments data !");
+	});
 }
 
 function make_base_auth(user, password, Base64) {
