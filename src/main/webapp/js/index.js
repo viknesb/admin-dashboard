@@ -130,8 +130,7 @@ angular.module("services",["user"]).
 				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
 					cache : false}).
 				then(function(response) {
-					console.log(response);
-					return response;
+					return response.data;
 				}, function(error) {
 					console.log("Error occured while fetching experiment with id "+expId);
 				});
@@ -145,7 +144,6 @@ angular.module("services",["user"]).
 				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/userwfregistry/get/workflows",
 					cache : false}).
 				then(function(response) {
-					console.log(response);
 					var results = response.data.workflowList;
 					var workflows = [];
 					for (var item in results) {
