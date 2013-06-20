@@ -4,10 +4,10 @@
   padding: 15px;
   border: currentColor;
   transition:0.25s linear;
-  left: 3.7%;
-  top: 7%;
-  width: 90%;
-  height: 80%;
+  left: 3%;
+  top: 5%;
+  width: 91.7%;
+  height: 86%;
   overflow: auto;
   border-collapse: separate;
   position: fixed !important;
