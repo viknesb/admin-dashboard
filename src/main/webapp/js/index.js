@@ -5,7 +5,7 @@ app.config(['$httpProvider','$routeProvider' ,function($httpProvider, $routeProv
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
 	$routeProvider.
 	when('/', {controller:'HomeCtrl', templateUrl:'home.html'}).
-	when('/edit/:projectId', {controller:'EditCtrl', templateUrl:'detail.html'}).
+	when('/experiments/:expId', {controller:'ExperimentCtrl', templateUrl:'experimentDetail.html'}).
 	when('/experiments', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
 	when('/projects', {controller:'ProjectCtrl', templateUrl:'projects.html'}).
 	when('/workflows', {controller:'WorkflowCtrl', templateUrl:'workflows.html'}).
@@ -50,18 +50,31 @@ angular.module("controllers",[]).
 	controller("EditCtrl", ["$scope",function($scope) {
 		
 	}]).
-	controller("ExperimentCtrl", ["$scope","Experiment",function($scope,Experiment) {
-		Experiment.getAll().then(function(experiments) {
-			$scope.experiments = experiments;
-		});
+	controller("ExperimentCtrl", ["$scope","$location","$routeParams","Experiment",function($scope,$location,$routeParams,Experiment) {
+		
+		if($location.path()=="/experiments") {
+			Experiment.getAll().then(function(experiments) {
+				$scope.experiments = experiments;
+			}); 
+		}
+		else if($location.path().indexOf("/experiments/")==0) {
+			var expId = $routeParams.expId;
+			if(angular.isString(expId) && expId!="") {
+				Experiment.getById(expId).then(function(experiment) {
+					$scope.experiment = experiment;
+				});
+			}
+		}
 	}]).
 	controller("ProjectCtrl", ["$scope","Project",function($scope,Project) {
 		Project.getAll().then(function(projects) {
 			$scope.projects = projects;
 		});
 	}]).
-	controller("WorkflowCtrl", ["$scope",function($scope) {
-		
+	controller("WorkflowCtrl", ["$scope","Workflow",function($scope,Workflow) {
+		Workflow.getAll().then(function(workflows) {
+			$scope.workflows = workflows;
+		});
 	}]);
 
 // Services
@@ -111,6 +124,17 @@ angular.module("services",["user"]).
 				}, function(error) {
 					console.log("Error occured while fetching experiments !");
 				});
+			},
+			getById : function(expId) {
+				$http.defaults.headers.common.Authorization = User.getAuthHeader("admin","admin");
+				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
+					cache : false}).
+				then(function(response) {
+					console.log(response);
+					return response;
+				}, function(error) {
+					console.log("Error occured while fetching experiment with id "+expId);
+				});
 			}
 		};
 	}]).
@@ -121,20 +145,18 @@ angular.module("services",["user"]).
 				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/userwfregistry/get/workflows",
 					cache : false}).
 				then(function(response) {
-					var results = response.data.experiments;
+					console.log(response);
+					var results = response.data.workflowList;
 					var workflows = [];
-					for (var item in data.workflows) {
+					for (var item in results) {
 						var workflow = {};
-						workflow.id = data.experiments[item].experimentId;
-						workflow.gatewayName = data.experiments[item].gateway.gatewayName;
-						workflow.projectName = data.experiments[item].project.projectName;
-						workflow.submittedDate = new Date(data.experiments[item].submittedDate).toLocaleString();
-						workflow.username = data.experiments[item].user.userName;
+						workflow.graph = results[item].workflowGraph;
+						workflow.name = results[item].workflowName;
 						workflows.push(workflow);
 					}
 					return workflows;
 				}, function(error) {
-					console.log("Error occured while fetching experiments !");
+					console.log("Error occured while fetching workflows !");
 				});
 			}
 		};
