@@ -1,14 +1,15 @@
-var app = angular.module("adminMonitorApp",["controllers","services"]);
+var app = angular.module("adminMonitorApp",["controllers"]);
 
 app.config(['$httpProvider','$routeProvider' ,function($httpProvider, $routeProvider) {
 	$httpProvider.defaults.useXDomain = true;
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
 	$routeProvider.
-	when('/', {controller:'HomeCtrl', templateUrl:'home.html'}).
+	when('/', {controller:'CredentialCtrl', templateUrl:'credentials.html'}).
 	when('/experiments/:expId', {controller:'ExperimentCtrl', templateUrl:'experimentDetail.html'}).
 	when('/experiments', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
 	when('/projects', {controller:'ProjectCtrl', templateUrl:'projects.html'}).
 	when('/workflows', {controller:'WorkflowCtrl', templateUrl:'workflows.html'}).
+	when('/credentials', {controller:'CredentialCtrl', templateUrl:'credentials.html'}).
 	otherwise({redirectTo:'/'});
 }]);
 
@@ -27,11 +28,11 @@ app.directive("adminboard", function() {
 					'<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
 					'<h4 >Airavata Dashboard</h4>' +
 					'<ul class="nav nav-tabs">' +
-					'<li><a href="#/" data-toggle="tab">Home</a></li>' +
+					'<li><a href="#/" data-toggle="tab">Credentials</a></li>' +
 					'<li><a href="#/experiments" data-toggle="tab">Experiments</a></li>' +
 					'<li><a href="#/projects" data-toggle="tab">Projects</a></li>' +
-					'<li><a href="#/provenance" data-toggle="tab">Provenance</a></li>' +
 					'<li><a href="#/workflows" data-toggle="tab">Workflows</a></li>' +
+					//'<li class="pull-right"><a href="#/credentials" data-toggle="tab">Credentials</a></li>' +
 					'</ul>' +
 					'<div ng-view></div>' +
 					'<div class="tab-content" ng-transclude></div>' +
@@ -43,12 +44,21 @@ app.directive("adminboard", function() {
 
 
 // Controllers
-angular.module("controllers",[]).
+angular.module("controllers",["user","services"]).
 	controller("HomeCtrl", ["$scope",function($scope) {
 		
 	}]).
-	controller("EditCtrl", ["$scope",function($scope) {
-		
+	controller("CredentialCtrl", ["$scope","User",function($scope,User) {
+		$scope.save = function() {
+			User.setCredentials($scope.username,$scope.password);
+			$scope.crdSetFlag = true;
+		};
+		$scope.clear = function() {
+			$scope.username = "";
+			$scope.password = "";
+			User.setCredentials("","");
+			$scope.crdSetFlag = false;
+		};
 	}]).
 	controller("ExperimentCtrl", ["$scope","$location","$routeParams","Experiment",function($scope,$location,$routeParams,Experiment) {
 		
@@ -82,7 +92,7 @@ angular.module("services",["user"]).
 	factory("Project",["$http","User", function($http, User) {
 		return {
 			getAll : function() {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader("admin","admin");
+				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/projectregistry/get/projects",
 					cache : false}).
 				then(function(response) {
@@ -105,7 +115,7 @@ angular.module("services",["user"]).
 	factory("Experiment",["$http","User", function($http, User) {
 		return {
 			getAll : function() {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader("admin","admin");
+				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/experimentregistry/get/experiments/all",
 					cache : false}).
 				then(function(response) {
@@ -126,7 +136,7 @@ angular.module("services",["user"]).
 				});
 			},
 			getById : function(expId) {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader("admin","admin");
+				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
 					cache : false}).
 				then(function(response) {
@@ -140,7 +150,7 @@ angular.module("services",["user"]).
 	factory("Workflow",["$http","User", function($http, User) {
 		return {
 			getAll : function() {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader("admin","admin");
+				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/userwfregistry/get/workflows",
 					cache : false}).
 				then(function(response) {
@@ -163,10 +173,20 @@ angular.module("services",["user"]).
 // Utils
 angular.module("user",["encoder"]).
 factory("User",["Base64", function(Base64) {
+	var _username = "";
+	var _password = "";
 	return {
-		getAuthHeader : function(username,password) {
-			var token = username + ':' + password;
+		getAuthHeader : function() {
+			var token = _username + ':' + _password;
 			return "Basic " + Base64.encode(token);
+		},
+		setCredentials : function(username,password) {
+			_username = username;
+			_password = password;
+			return;
+		},
+		getUsername : function() {
+			return _username;
 		}
 	};
 }]);
