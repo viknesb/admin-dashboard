@@ -1,0 +1,39 @@
+<div>
+	<button ng-click="hideSearch()" class="close">&times;</button>
+	<form>
+	<fieldset>
+		<legend>Search</legend>
+		<div class="control-group">
+			<label class="control-label">For</label>
+			<div class="controls">
+				<select class="span12" ng-model="searchFor">
+					<option>Experiment</option>
+					<option>Project</option>
+					<option>Workflow</option>
+				</select>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">By</label>
+			<div class="controls">
+				<select class="span12" ng-model="searchBy">
+					<option>Id</option>
+					<option>User</option>
+					<option>Date</option>
+				</select>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">{{searchBy}}</label>
+			<div class="controls">
+				<input class="span12" type="text" ng-model="searchText" placeholder="Value">
+			</div>
+		</div>
+		<div class="control-group">
+			<div class="controls">
+				<button ng-click="search(searchFor,searchBy,searchText)" class="btn">Search</button>
+			</div>
+		</div>
+	</fieldset>
+	</form>
+</div>

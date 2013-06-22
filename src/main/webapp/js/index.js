@@ -5,11 +5,12 @@ app.config(['$httpProvider','$routeProvider' ,function($httpProvider, $routeProv
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
 	$routeProvider.
 	when('/', {controller:'CredentialCtrl', templateUrl:'credentials.html'}).
-	when('/experiments/:expId', {controller:'ExperimentCtrl', templateUrl:'experimentDetail.html'}).
+	when('/experiments/id/:expId', {controller:'ExperimentCtrl', templateUrl:'experimentDetail.html'}).
+	when('/experiments/user/:username', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
 	when('/experiments', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
 	when('/projects', {controller:'ProjectCtrl', templateUrl:'projects.html'}).
 	when('/workflows', {controller:'WorkflowCtrl', templateUrl:'workflows.html'}).
-	when('/credentials', {controller:'CredentialCtrl', templateUrl:'credentials.html'}).
+	//when('/credentials', {controller:'CredentialCtrl', templateUrl:'credentials.html'}).
 	otherwise({redirectTo:'/'});
 }]);
 
@@ -18,8 +19,40 @@ app.directive("adminboard", function() {
 		restrict : "E",
 		transclude : true,
 		scope : {},
-		controller : function($scope,$element) {
-			
+		controller : function($scope,$element,$location) {
+			$scope.showSearch = function() {
+				$scope.showSearchPane = true;
+			};
+			$scope.hideSearch = function() {
+				$scope.showSearchPane = false;
+			};
+			$scope.search = function (searchFor,searchBy,searchText){
+				var searchUrl = "";
+				if(searchFor==undefined || searchFor=="" || searchBy==undefined || searchBy=="" || searchText==undefined || searchText=="")
+					return;
+				switch(searchFor) {
+				case "Experiment" :
+					searchUrl += "/experiments";
+					break;
+				case "Project" :
+					searchUrl += "/projects";
+					break;
+				case "Workflow" :
+					searchUrl += "/workflows";
+					break;
+				}
+				switch(searchBy) {
+				case "User" :
+					searchUrl += "/user";
+					break;
+				case "Id" :
+					searchUrl += "/id";
+					break;
+				}
+				searchUrl += "/"+searchText;
+				console.log(searchUrl);
+				$location.path(searchUrl);
+			};
 		},
 		template : 
 			'<div>' +
@@ -32,9 +65,12 @@ app.directive("adminboard", function() {
 					'<li><a href="#/experiments" data-toggle="tab">Experiments</a></li>' +
 					'<li><a href="#/projects" data-toggle="tab">Projects</a></li>' +
 					'<li><a href="#/workflows" data-toggle="tab">Workflows</a></li>' +
-					//'<li class="pull-right"><a href="#/credentials" data-toggle="tab">Credentials</a></li>' +
+					'<li class="pull-right"><a ng-click="showSearch()" data-toggle="tab">Search</a></li>' +
 					'</ul>' +
-					'<div ng-view></div>' +
+					'<div class="row-fluid">' +
+					'<div ng-class="{span10:showSearchPane, span12:!showSearchPane}"><div ng-view></div></div>' +
+					'<div ng-include src="\'search.html\'" ng-show="showSearchPane" class="span2 well">' +
+					'</div>' +
 					'<div class="tab-content" ng-transclude></div>' +
 				'</div>' +
 			'</div>',
@@ -46,7 +82,7 @@ app.directive("adminboard", function() {
 // Controllers
 angular.module("controllers",["user","services"]).
 	controller("HomeCtrl", ["$scope",function($scope) {
-		
+
 	}]).
 	controller("CredentialCtrl", ["$scope","User",function($scope,User) {
 		$scope.save = function() {
@@ -65,9 +101,15 @@ angular.module("controllers",["user","services"]).
 		if($location.path()=="/experiments") {
 			Experiment.getAll().then(function(experiments) {
 				$scope.experiments = experiments;
-			}); 
+			});
 		}
-		else if($location.path().indexOf("/experiments/")==0) {
+		else if($location.path().indexOf("/experiments/user/")==0) {
+			var username = $routeParams.username;
+			Experiment.getByUser(username).then(function(experiments) {
+				$scope.experiments = experiments;
+			});
+		}
+		else if($location.path().indexOf("/experiments/id/")==0) {
 			var expId = $routeParams.expId;
 			if(angular.isString(expId) && expId!="") {
 				Experiment.getById(expId).then(function(experiment) {
@@ -173,8 +215,8 @@ angular.module("services",["user"]).
 // Utils
 angular.module("user",["encoder"]).
 factory("User",["Base64", function(Base64) {
-	var _username = "";
-	var _password = "";
+	var _username = "admin";
+	var _password = "admin";
 	return {
 		getAuthHeader : function() {
 			var token = _username + ':' + _password;
