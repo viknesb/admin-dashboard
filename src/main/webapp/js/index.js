@@ -80,20 +80,31 @@ app.directive("adminboard", function() {
 
 
 // Controllers
-angular.module("controllers",["user","services"]).
+angular.module("controllers",["config","services"]).
 	controller("HomeCtrl", ["$scope",function($scope) {
 
 	}]).
-	controller("CredentialCtrl", ["$scope","User",function($scope,User) {
-		$scope.save = function() {
+	controller("CredentialCtrl", ["$scope","User","Server",function($scope,User,Server) {
+		$scope.saveCrd = function() {
 			User.setCredentials($scope.username,$scope.password);
 			$scope.crdSetFlag = true;
 		};
-		$scope.clear = function() {
+		$scope.clearCrd = function() {
 			$scope.username = "";
 			$scope.password = "";
-			User.setCredentials("","");
+			User.clearCredentials();
 			$scope.crdSetFlag = false;
+		};
+		$scope.saveHost = function() {
+			Server.setHostDetails($scope.protocol,$scope.hostname,$scope.port);
+			$scope.hostSetFlag = true;
+		};
+		$scope.clearHost = function() {
+			$scope.protocol = "http";
+			$scope.hostname = "";
+			$scope.port = "";
+			Server.clearHostDetails();
+			$scope.hostSetFlag = false;
 		};
 	}]).
 	controller("ExperimentCtrl", ["$scope","$location","$routeParams","Experiment",function($scope,$location,$routeParams,Experiment) {
@@ -115,6 +126,9 @@ angular.module("controllers",["user","services"]).
 				Experiment.getById(expId).then(function(experiment) {
 					$scope.experiment = experiment;
 				});
+				Experiment.getExecutionErrors(expId).then(function(experiment) {
+					//$scope.experiment = experiment;
+				});
 			}
 		}
 	}]).
@@ -130,12 +144,12 @@ angular.module("controllers",["user","services"]).
 	}]);
 
 // Services
-angular.module("services",["user"]).
-	factory("Project",["$http","User", function($http, User) {
+angular.module("services",["config"]).
+	factory("Project",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
 				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/projectregistry/get/projects",
+				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/projectregistry/get/projects",
 					cache : false}).
 				then(function(response) {
 					var results = response.data.workspaceProjects;
@@ -154,11 +168,11 @@ angular.module("services",["user"]).
 			}
 		};
 	}]).
-	factory("Experiment",["$http","User", function($http, User) {
+	factory("Experiment",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
 				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/experimentregistry/get/experiments/all",
+				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/experimentregistry/get/experiments/all",
 					cache : false}).
 				then(function(response) {
 					var results = response.data.experiments;
@@ -179,21 +193,32 @@ angular.module("services",["user"]).
 			},
 			getById : function(expId) {
 				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
+				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
 					cache : false}).
 				then(function(response) {
 					return response.data;
 				}, function(error) {
 					console.log("Error occured while fetching experiment with id "+expId);
 				});
+			},
+			getExecutionErrors : function(expId) {
+				$http.defaults.headers.common.Authorization = User.getAuthHeader();
+				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+expId+"&nodeId=echo_invoke",
+					cache : false}).
+				then(function(response) {
+					console.log(response);
+					return response.data;
+				}, function(error) {
+					console.log("Error occured while fetching execution errors for experiment with id "+expId);
+				});
 			}
 		};
 	}]).
-	factory("Workflow",["$http","User", function($http, User) {
+	factory("Workflow",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
 				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:"http://localhost:8080/airavata-registry/api/userwfregistry/get/workflows",
+				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/userwfregistry/get/workflows",
 					cache : false}).
 				then(function(response) {
 					var results = response.data.workflowList;
@@ -213,7 +238,7 @@ angular.module("services",["user"]).
 	}]);
 
 // Utils
-angular.module("user",["encoder"]).
+angular.module("config",["encoder"]).
 factory("User",["Base64", function(Base64) {
 	var _username = "admin";
 	var _password = "admin";
@@ -227,8 +252,37 @@ factory("User",["Base64", function(Base64) {
 			_password = password;
 			return;
 		},
+		clearCredentials : function() {
+			_username = "";
+			_password = "";
+			return;
+		},
 		getUsername : function() {
 			return _username;
+		}
+	};
+}]).
+factory("Server",[function() {
+	var _protocol = "http";
+	var _hostname = "localhost";
+	var _port = "8080";
+	return {
+		setHostDetails : function(protocol,hostname,port) {
+			if(protocol!=undefined && protocol!="") {
+				_protocol = protocol;
+			}
+			_hostname = hostname;
+			_port = port;
+			return;
+		},
+		clearHostDetails : function() {
+			_protocol = "http";
+			_hostname = "";
+			_port = "";
+			return;
+		},
+		getServer : function() {
+			return (_port!=undefined && _port!="" ? _protocol+"://"+_hostname+":"+_port : _protocol+"://"+_hostname);
 		}
 	};
 }]);
