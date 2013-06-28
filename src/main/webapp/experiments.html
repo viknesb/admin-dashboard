@@ -17,18 +17,18 @@
 		<thead>
 		<tr>
 			<th>Experiment Id</th>
-			<th>Gateway</th>
-			<th>Project Name</th>
-			<th>Submitted Date</th>
+			<th>Template</th>
+			<th>Execution Status</th>
+			<th>Status Updated Date</th>
 			<th>Run By</th>
 		</tr>
 		</thead>
 		<tbody>
 		<tr ng-repeat="experiment in experiments">
 			<td><a ng-href="#/experiments/id/{{experiment.id}}">{{experiment.id}}</a></td>
-			<td>{{experiment.gatewayName}}</td>
-			<td>{{experiment.projectName}}</td>
-			<td>{{experiment.submittedDate}}</td>
+			<td>{{experiment.template}}</td>
+			<td>{{experiment.executionStatus}}</td>
+			<td>{{experiment.updatedDate}}</td>
 			<td>{{experiment.username}}</td>
 		</tr>
 		</tbody>

@@ -149,8 +149,8 @@ angular.module("services",["config"]).
 		return {
 			getAll : function() {
 				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/projectregistry/get/projects",
-					cache : false}).
+				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/projectregistry/get/projects",
+					cache : true}).
 				then(function(response) {
 					var results = response.data.workspaceProjects;
 					var projects = [];
@@ -172,9 +172,10 @@ angular.module("services",["config"]).
 		return {
 			getAll : function() {
 				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/experimentregistry/get/experiments/all",
-					cache : false}).
+				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/experimentregistry/get/experiments/all",
+					cache : true}).
 				then(function(response) {
+					console.log(response);
 					var results = response.data.experiments;
 					var experiments = [];
 					for (var item in results) {
@@ -191,9 +192,31 @@ angular.module("services",["config"]).
 					console.log("Error occured while fetching experiments !");
 				});
 			},
+			getByUser : function(username) {
+				$http.defaults.headers.common.Authorization = User.getAuthHeader();
+				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/get/experiment/user?user="+username,
+					cache : true}).
+				then(function(response) {
+					console.log(response);
+					var results = response.data.experimentDataList;
+					var experiments = [];
+					for (var item in results) {
+						var experiment = {};
+						experiment.id = results[item].experimentId;
+						experiment.template = results[item].workflowInstanceDataList[0].workflowInstance.templateName;
+						experiment.executionStatus = results[item].workflowInstanceDataList[0].workflowInstanceStatus.executionStatus;
+						experiment.updatedDate = new Date(results[item].workflowInstanceDataList[0].workflowInstanceStatus.statusUpdateTime).toLocaleString();
+						experiment.username = results[item].user;
+						experiments.push(experiment);
+					}
+					return experiments;
+				}, function(error) {
+					console.log("Error occured while fetching experiments !");
+				});
+			},
 			getById : function(expId) {
 				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
+				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
 					cache : false}).
 				then(function(response) {
 					return response.data;
@@ -203,7 +226,7 @@ angular.module("services",["config"]).
 			},
 			getExecutionErrors : function(expId) {
 				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+expId+"&nodeId=echo_invoke",
+				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+expId+"&nodeId=echo_invoke",
 					cache : false}).
 				then(function(response) {
 					console.log(response);
@@ -218,8 +241,8 @@ angular.module("services",["config"]).
 		return {
 			getAll : function() {
 				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:Server.getServer()+"/airavata-registry/api/userwfregistry/get/workflows",
-					cache : false}).
+				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/userwfregistry/get/workflows",
+					cache : true}).
 				then(function(response) {
 					var results = response.data.workflowList;
 					var workflows = [];
@@ -281,7 +304,7 @@ factory("Server",[function() {
 			_port = "";
 			return;
 		},
-		getServer : function() {
+		getEndpoint : function() {
 			return (_port!=undefined && _port!="" ? _protocol+"://"+_hostname+":"+_port : _protocol+"://"+_hostname);
 		}
 	};
