@@ -107,7 +107,7 @@ angular.module("controllers",["config","services"]).
 			$scope.hostSetFlag = false;
 		};
 	}]).
-	controller("ExperimentCtrl", ["$scope","$location","$routeParams","Experiment",function($scope,$location,$routeParams,Experiment) {
+	controller("ExperimentCtrl", ["$scope","$location","$routeParams","Experiment","Workflow",function($scope,$location,$routeParams,Experiment,Workflow) {
 		
 		if($location.path()=="/experiments") {
 			Experiment.getAll().then(function(experiments) {
@@ -122,15 +122,37 @@ angular.module("controllers",["config","services"]).
 		}
 		else if($location.path().indexOf("/experiments/id/")==0) {
 			var expId = $routeParams.expId;
-			if(angular.isString(expId) && expId!="") {
-				Experiment.getById(expId).then(function(experiment) {
-					$scope.experiment = experiment;
-				});
-				Experiment.getExecutionErrors(expId).then(function(experiment) {
-					//$scope.experiment = experiment;
+			Experiment.getById(expId).then(function(experiment) {
+				$scope.experiment = experiment;
+			});
+		}		
+		$scope.showErrorDetails = function() {
+			$scope.errorDetails = true;
+			var expId = $scope.experiment.experimentId;
+			var workflowId = $scope.experiment.workflowInstanceDataList[0].workflowInstance.workflowExecutionId;
+			$scope.workflowErrors = [];
+			Workflow.getWorkflowExecutionErrors(expId, workflowId).then(function(workflowErrors) {
+				for(item in workflowErrors) {
+					var error = workflowErrors[item];
+					if(error!={}) { 
+						$scope.workflowErrors.push(error);
+					}
+				}
+			});
+			var nodesList = $scope.experiment.workflowInstanceDataList[0].nodeDataList;
+			$scope.nodeErrors = [];
+			for(i in nodesList) {
+				Workflow.getNodeExecutionErrors(expId, workflowId,nodesList[i].nodeId).then(function(nodeErrors) {
+					for(item in nodeErrors) {
+						var error = nodeErrors[item];
+						if(error!={}) {
+							error.type = nodesList[i].type;
+							$scope.nodeErrors.push(error);
+						}
+					}
 				});
 			}
-		}
+		};
 	}]).
 	controller("ProjectCtrl", ["$scope","Project",function($scope,Project) {
 		Project.getAll().then(function(projects) {
@@ -219,20 +241,10 @@ angular.module("services",["config"]).
 				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
 					cache : false}).
 				then(function(response) {
-					return response.data;
-				}, function(error) {
-					console.log("Error occured while fetching experiment with id "+expId);
-				});
-			},
-			getExecutionErrors : function(expId) {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader();
-				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+expId+"&nodeId=echo_invoke",
-					cache : false}).
-				then(function(response) {
 					console.log(response);
 					return response.data;
 				}, function(error) {
-					console.log("Error occured while fetching execution errors for experiment with id "+expId);
+					console.log("Error occured while fetching experiment with id "+expId);
 				});
 			}
 		};
@@ -255,6 +267,26 @@ angular.module("services",["config"]).
 					return workflows;
 				}, function(error) {
 					console.log("Error occured while fetching workflows !");
+				});
+			},
+			getWorkflowExecutionErrors : function(expId,workflowId) {
+				$http.defaults.headers.common.Authorization = User.getAuthHeader();
+				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/workflow/errors?experimentId="+expId+"&workflowInstanceId="+workflowId,
+					cache : false}).
+				then(function(response) {
+					return response.data.workflowExecutionErrorList;
+				}, function(error) {
+					console.log("Error occured while fetching execution errors for workflow with id "+workflowId);
+				});
+			},
+			getNodeExecutionErrors : function(expId,workflowId,nodeId) {
+				$http.defaults.headers.common.Authorization = User.getAuthHeader();
+				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+workflowId+"&nodeId="+nodeId,
+					cache : false}).
+				then(function(response) {
+					return response.data.nodeExecutionErrorList;
+				}, function(error) {
+					console.log("Error occured while fetching execution errors for workflow id "+workflowId+" with node id "+nodeId);
 				});
 			}
 		};
