@@ -82,29 +82,21 @@ app.directive("adminboard", function() {
 // Controllers
 angular.module("controllers",["config","services"]).
 	controller("LoginCtrl", ["$scope","User","Server",function($scope,User,Server) {
-		$scope.saveCrd = function() {
+		$scope.save = function() {
+			Server.setEndpoint($scope.url);
 			User.login($scope.username,$scope.password).then(function(success) {
 				if(success) {
 					$scope.crdSetFlag = true;
 				}
 			});
 		};
-		$scope.clearCrd = function() {
+		$scope.clear = function() {
 			$scope.username = "";
 			$scope.password = "";
+			$scope.url = "";
 			User.clearCredentials();
+			Server.clearEndpoint();
 			$scope.crdSetFlag = false;
-		};
-		$scope.saveHost = function() {
-			Server.setHostDetails($scope.protocol,$scope.hostname,$scope.port);
-			$scope.hostSetFlag = true;
-		};
-		$scope.clearHost = function() {
-			$scope.protocol = "http";
-			$scope.hostname = "";
-			$scope.port = "";
-			Server.clearHostDetails();
-			$scope.hostSetFlag = false;
 		};
 	}]).
 	controller("ExperimentCtrl", ["$scope","$location","$routeParams","Experiment","Workflow",function($scope,$location,$routeParams,Experiment,Workflow) {
@@ -170,7 +162,7 @@ angular.module("services",["config"]).
 	factory("Project",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
-				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/projectregistry/get/projects",
+				return $http({method:"GET", url:Server.getEndpoint()+"api/projectregistry/get/projects",
 					cache : true, withCredentials : true}).
 				then(function(response) {
 					var results = response.data.workspaceProjects;
@@ -192,7 +184,7 @@ angular.module("services",["config"]).
 	factory("Experiment",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
-				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/experimentregistry/get/experiments/all",
+				return $http({method:"GET", url:Server.getEndpoint()+"api/experimentregistry/get/experiments/all",
 					cache : true, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
@@ -213,7 +205,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getByUser : function(username) {
-				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/get/experiment/user?user="+username,
+				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment/user?user="+username,
 					cache : true, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
@@ -234,7 +226,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getById : function(expId) {
-				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
+				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment?experimentId="+expId,
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
@@ -248,7 +240,7 @@ angular.module("services",["config"]).
 	factory("Workflow",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
-				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/userwfregistry/get/workflows",
+				return $http({method:"GET", url:Server.getEndpoint()+"api/userwfregistry/get/workflows",
 					cache : true, withCredentials : true}).
 				then(function(response) {
 					var results = response.data.workflowList;
@@ -265,7 +257,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getWorkflowExecutionErrors : function(expId,workflowId) {
-				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/workflow/errors?experimentId="+expId+"&workflowInstanceId="+workflowId,
+				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/workflow/errors?experimentId="+expId+"&workflowInstanceId="+workflowId,
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.workflowExecutionErrorList;
@@ -274,7 +266,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getNodeExecutionErrors : function(expId,workflowId,nodeId) {
-				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+workflowId+"&nodeId="+nodeId,
+				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+workflowId+"&nodeId="+nodeId,
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.nodeExecutionErrorList;
@@ -304,7 +296,7 @@ factory("User",["$http","Base64","Server", function($http,Base64,Server) {
 		login : function(username,password) {
 			_username = username;
 			$http.defaults.headers.common.Authorization = this.getAuthHeader(username,password);
-			return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/congfigregistry/get/eventingservice/uri",
+			return $http({method:"GET", url:Server.getEndpoint()+"api/congfigregistry/get/eventingservice/uri",
 				cache : false}).
 			then(function(response) {
 				return true;
@@ -316,26 +308,23 @@ factory("User",["$http","Base64","Server", function($http,Base64,Server) {
 	};
 }]).
 factory("Server",[function() {
-	var _protocol = "http";
-	var _hostname = "localhost";
-	var _port = "8080";
+	var _url = "http://localhost:8080/airavata-registry/";
+	function endsWith(str, suffix) {
+	    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+	}
 	return {
-		setHostDetails : function(protocol,hostname,port) {
-			if(protocol!=undefined && protocol!="") {
-				_protocol = protocol;
-			}
-			_hostname = hostname;
-			_port = port;
+		setEndpoint : function(url) {
+			if(!endsWith(url,"/"))
+				url += "/";
+			_url = url;
 			return;
 		},
-		clearHostDetails : function() {
-			_protocol = "http";
-			_hostname = "";
-			_port = "";
+		clearEndpoint : function() {
+			_url = "";
 			return;
 		},
 		getEndpoint : function() {
-			return (_port!=undefined && _port!="" ? _protocol+"://"+_hostname+":"+_port : _protocol+"://"+_hostname);
+			return _url;
 		}
 	};
 }]);
