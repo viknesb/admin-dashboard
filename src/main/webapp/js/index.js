@@ -6,6 +6,7 @@ app.config(['$httpProvider','$routeProvider' ,function($httpProvider, $routeProv
 	$routeProvider.
 	when('/', {controller:'LoginCtrl', templateUrl:'credentials.html'}).
 	when('/experiments/id/:expId', {controller:'ExperimentCtrl', templateUrl:'experimentDetail.html'}).
+	when('/experiments/errors/:expId', {controller:'ExperimentCtrl', templateUrl:'experimentErrorDetail.html'}).
 	when('/experiments/user/:username', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
 	when('/experiments', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
 	when('/projects', {controller:'ProjectCtrl', templateUrl:'projects.html'}).
@@ -117,34 +118,37 @@ angular.module("controllers",["config","services"]).
 			Experiment.getById(expId).then(function(experiment) {
 				$scope.experiment = experiment;
 			});
-		}		
-		$scope.showErrorDetails = function() {
-			$scope.errorDetails = true;
-			var expId = $scope.experiment.experimentId;
-			var workflowId = $scope.experiment.workflowInstanceDataList[0].workflowInstance.workflowExecutionId;
-			$scope.workflowErrors = [];
-			Workflow.getWorkflowExecutionErrors(expId, workflowId).then(function(workflowErrors) {
-				for(item in workflowErrors) {
-					var error = workflowErrors[item];
-					if(error!={}) { 
-						$scope.workflowErrors.push(error);
-					}
-				}
-			});
-			var nodesList = $scope.experiment.workflowInstanceDataList[0].nodeDataList;
-			$scope.nodeErrors = [];
-			for(i in nodesList) {
-				Workflow.getNodeExecutionErrors(expId, workflowId,nodesList[i].nodeId).then(function(nodeErrors) {
-					for(item in nodeErrors) {
-						var error = nodeErrors[item];
-						if(error!={}) {
-							error.type = nodesList[i].type;
-							$scope.nodeErrors.push(error);
+		}
+		else if($location.path().indexOf("/experiments/errors/")==0) {
+			var expId = $routeParams.expId;
+			Experiment.getById(expId).then(function(experiment) {
+				$scope.experiment = experiment;
+				var expId = experiment.experimentId;
+				var workflowId = experiment.workflowInstanceDataList[0].workflowInstance.workflowExecutionId;
+				$scope.workflowErrors = [];
+				Workflow.getWorkflowExecutionErrors(expId, workflowId).then(function(workflowErrors) {
+					for(item in workflowErrors) {
+						var error = workflowErrors[item];
+						if(error!={}) { 
+							$scope.workflowErrors.push(error);
 						}
 					}
 				});
-			}
-		};
+				var nodesList = experiment.workflowInstanceDataList[0].nodeDataList;
+				$scope.nodeErrors = [];
+				for(i in nodesList) {
+					Workflow.getNodeExecutionErrors(expId, workflowId,nodesList[i].nodeId).then(function(nodeErrors) {
+						for(item in nodeErrors) {
+							var error = nodeErrors[item];
+							if(error!={}) {
+								error.type = nodesList[i].type;
+								$scope.nodeErrors.push(error);
+							}
+						}
+					});
+				}
+			});
+		}
 	}]).
 	controller("ProjectCtrl", ["$scope","Project",function($scope,Project) {
 		Project.getAll().then(function(projects) {
