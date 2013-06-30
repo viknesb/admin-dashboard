@@ -4,13 +4,13 @@ app.config(['$httpProvider','$routeProvider' ,function($httpProvider, $routeProv
 	$httpProvider.defaults.useXDomain = true;
     delete $httpProvider.defaults.headers.common['X-Requested-With'];
 	$routeProvider.
-	when('/', {controller:'CredentialCtrl', templateUrl:'credentials.html'}).
+	when('/', {controller:'LoginCtrl', templateUrl:'credentials.html'}).
 	when('/experiments/id/:expId', {controller:'ExperimentCtrl', templateUrl:'experimentDetail.html'}).
 	when('/experiments/user/:username', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
 	when('/experiments', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
 	when('/projects', {controller:'ProjectCtrl', templateUrl:'projects.html'}).
 	when('/workflows', {controller:'WorkflowCtrl', templateUrl:'workflows.html'}).
-	//when('/credentials', {controller:'CredentialCtrl', templateUrl:'credentials.html'}).
+	//when('/credentials', {controller:'LoginCtrl', templateUrl:'credentials.html'}).
 	otherwise({redirectTo:'/'});
 }]);
 
@@ -81,13 +81,13 @@ app.directive("adminboard", function() {
 
 // Controllers
 angular.module("controllers",["config","services"]).
-	controller("HomeCtrl", ["$scope",function($scope) {
-
-	}]).
-	controller("CredentialCtrl", ["$scope","User","Server",function($scope,User,Server) {
+	controller("LoginCtrl", ["$scope","User","Server",function($scope,User,Server) {
 		$scope.saveCrd = function() {
-			User.setCredentials($scope.username,$scope.password);
-			$scope.crdSetFlag = true;
+			User.login($scope.username,$scope.password).then(function(success) {
+				if(success) {
+					$scope.crdSetFlag = true;
+				}
+			});
 		};
 		$scope.clearCrd = function() {
 			$scope.username = "";
@@ -170,9 +170,8 @@ angular.module("services",["config"]).
 	factory("Project",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/projectregistry/get/projects",
-					cache : true}).
+					cache : true, withCredentials : true}).
 				then(function(response) {
 					var results = response.data.workspaceProjects;
 					var projects = [];
@@ -193,9 +192,8 @@ angular.module("services",["config"]).
 	factory("Experiment",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/experimentregistry/get/experiments/all",
-					cache : true}).
+					cache : true, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
 					var results = response.data.experiments;
@@ -215,9 +213,8 @@ angular.module("services",["config"]).
 				});
 			},
 			getByUser : function(username) {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/get/experiment/user?user="+username,
-					cache : true}).
+					cache : true, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
 					var results = response.data.experimentDataList;
@@ -237,9 +234,8 @@ angular.module("services",["config"]).
 				});
 			},
 			getById : function(expId) {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/get/experiment?experimentId="+expId,
-					cache : false}).
+					cache : false, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
 					return response.data;
@@ -252,9 +248,8 @@ angular.module("services",["config"]).
 	factory("Workflow",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/userwfregistry/get/workflows",
-					cache : true}).
+					cache : true, withCredentials : true}).
 				then(function(response) {
 					var results = response.data.workflowList;
 					var workflows = [];
@@ -270,9 +265,8 @@ angular.module("services",["config"]).
 				});
 			},
 			getWorkflowExecutionErrors : function(expId,workflowId) {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/workflow/errors?experimentId="+expId+"&workflowInstanceId="+workflowId,
-					cache : false}).
+					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.workflowExecutionErrorList;
 				}, function(error) {
@@ -280,9 +274,8 @@ angular.module("services",["config"]).
 				});
 			},
 			getNodeExecutionErrors : function(expId,workflowId,nodeId) {
-				$http.defaults.headers.common.Authorization = User.getAuthHeader();
 				return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+workflowId+"&nodeId="+nodeId,
-					cache : false}).
+					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.nodeExecutionErrorList;
 				}, function(error) {
@@ -294,26 +287,31 @@ angular.module("services",["config"]).
 
 // Utils
 angular.module("config",["encoder"]).
-factory("User",["Base64", function(Base64) {
+factory("User",["$http","Base64","Server", function($http,Base64,Server) {
 	var _username = "admin";
-	var _password = "admin";
 	return {
-		getAuthHeader : function() {
-			var token = _username + ':' + _password;
+		getAuthHeader : function(username,password) {
+			var token = username + ':' + password;
 			return "Basic " + Base64.encode(token);
-		},
-		setCredentials : function(username,password) {
-			_username = username;
-			_password = password;
-			return;
 		},
 		clearCredentials : function() {
 			_username = "";
-			_password = "";
 			return;
 		},
 		getUsername : function() {
 			return _username;
+		},
+		login : function(username,password) {
+			_username = username;
+			$http.defaults.headers.common.Authorization = this.getAuthHeader(username,password);
+			return $http({method:"GET", url:Server.getEndpoint()+"/airavata-registry/api/congfigregistry/get/eventingservice/uri",
+				cache : false}).
+			then(function(response) {
+				return true;
+			}, function(error) {
+				console.error("Error logging in with username "+_username+" and the password you provided");
+				return false;
+			});
 		}
 	};
 }]).
