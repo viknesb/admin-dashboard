@@ -7,8 +7,10 @@ app.config(['$httpProvider','$routeProvider' ,function($httpProvider, $routeProv
 	when('/', {controller:'LoginCtrl', templateUrl:'credentials.html'}).
 	when('/experiments/id/:expId', {controller:'ExperimentCtrl', templateUrl:'experimentDetail.html'}).
 	when('/experiments/errors/:expId', {controller:'ExperimentCtrl', templateUrl:'experimentErrorDetail.html'}).
+	when('/experiments/errors/:expId/workflow/:workflowId', {controller:'WorkflowCtrl', templateUrl:'workflowErrorDetail.html'}).
 	when('/experiments/user/:username', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
-	when('/experiments', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
+	when('/experiments/all', {controller:'ExperimentCtrl', templateUrl:'experiments.html'}).
+	when('/experiments', {controller:'ExperimentCtrl', templateUrl:'users.html'}).
 	when('/projects', {controller:'ProjectCtrl', templateUrl:'projects.html'}).
 	when('/workflows', {controller:'WorkflowCtrl', templateUrl:'workflows.html'}).
 	//when('/credentials', {controller:'LoginCtrl', templateUrl:'credentials.html'}).
@@ -100,9 +102,14 @@ angular.module("controllers",["config","services"]).
 			$scope.crdSetFlag = false;
 		};
 	}]).
-	controller("ExperimentCtrl", ["$scope","$location","$routeParams","Experiment","Workflow",function($scope,$location,$routeParams,Experiment,Workflow) {
-		
+	controller("ExperimentCtrl", ["$scope","$location","$routeParams","Experiment","Workflow","User",function($scope,$location,$routeParams,Experiment,Workflow,User) {
 		if($location.path()=="/experiments") {
+			User.getAll().then(function(users) {
+				console.log(users);
+				$scope.users = users;
+			});
+		}
+		else if($location.path()=="/experiments/all") {
 			Experiment.getAll().then(function(experiments) {
 				$scope.experiments = experiments;
 			});
@@ -155,10 +162,48 @@ angular.module("controllers",["config","services"]).
 			$scope.projects = projects;
 		});
 	}]).
-	controller("WorkflowCtrl", ["$scope","Workflow",function($scope,Workflow) {
-		Workflow.getAll().then(function(workflows) {
-			$scope.workflows = workflows;
-		});
+	controller("WorkflowCtrl", ["$scope","$location","$routeParams","Experiment","Workflow",function($scope,$location,$routeParams,Experiment,Workflow) {
+		if($location.path()=="/workflows") {
+			Workflow.getAll().then(function(workflows) {
+				$scope.workflows = workflows;
+			});
+		}
+		else if($location.path().indexOf("/experiments/errors/")==0) {
+			var expId = $routeParams.expId;
+			var workflowId = $routeParams.workflowId;
+			Experiment.getById(expId).then(function(experiment) {
+				var expId = experiment.experimentId;
+				var workflowList = experiment.workflowInstanceDataList;
+				$scope.workflowErrors = [];
+				$scope.nodeErrors = [];
+				for(i in workflowList) {
+					// Get only the particular workflow error details.
+					if(workflowId==workflowList[i].workflowInstance.workflowExecutionId) {
+						$scope.workflow = workflowList[i];
+						Workflow.getWorkflowExecutionErrors(expId, workflowId).then(function(workflowErrors) {
+							for(item in workflowErrors) {
+								var error = workflowErrors[item];
+								if(error!={}) { 
+									$scope.workflowErrors.push(error);
+								}
+							}
+						});
+						var nodesList = workflowList[i].nodeDataList;
+						for(i in nodesList) {
+							Workflow.getNodeExecutionErrors(expId, workflowId,nodesList[i].nodeId).then(function(nodeErrors) {
+								for(item in nodeErrors) {
+									var error = nodeErrors[item];
+									if(error!={}) {
+										error.type = nodesList[i].type;
+										$scope.nodeErrors.push(error);
+									}
+								}
+							});
+						}
+					}
+				}
+			});
+		}
 	}]);
 
 // Services
@@ -209,7 +254,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getByUser : function(username) {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment/user?user="+username,
+				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment/user?username="+username,
 					cache : true, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
@@ -233,7 +278,6 @@ angular.module("services",["config"]).
 				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment?experimentId="+expId,
 					cache : false, withCredentials : true}).
 				then(function(response) {
-					console.log(response);
 					return response.data;
 				}, function(error) {
 					console.log("Error occured while fetching experiment with id "+expId);
@@ -307,6 +351,16 @@ factory("User",["$http","Base64","Server", function($http,Base64,Server) {
 			}, function(error) {
 				console.error("Error logging in with username "+_username+" and the password you provided");
 				return false;
+			});
+		},
+		getAll : function() {
+			return $http({method:"GET", url:Server.getEndpoint()+"api/userregistry/get/user/all",
+				cache : false, withCredentials : true}).
+			then(function(response) {
+				console.log(response);
+				return response.data.userList;
+			}, function(error) {
+				console.log("Error occured while fetching list of users");
 			});
 		}
 	};
