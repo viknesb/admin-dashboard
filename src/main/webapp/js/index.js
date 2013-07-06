@@ -214,16 +214,7 @@ angular.module("services",["config"]).
 				return $http({method:"GET", url:Server.getEndpoint()+"api/projectregistry/get/projects",
 					cache : true, withCredentials : true}).
 				then(function(response) {
-					var results = response.data.workspaceProjects;
-					var projects = [];
-					for (var item in results) {
-						var project = {};
-						project.gatewayName = results[item].gateway.gatewayName;
-						project.projectName = results[item].projectName;
-						project.username = results[item].airavataUser.userName;
-						projects.push(project);
-					}
-					return projects;
+					return response.data.workspaceProjects;
 				}, function(error) {
 					console.log("Error occured while fetching projects !");
 				});
@@ -241,11 +232,11 @@ angular.module("services",["config"]).
 					var experiments = [];
 					for (var item in results) {
 						var experiment = {};
-						experiment.id = results[item].experimentId;
+						experiment.experimentId = results[item].experimentId;
 						experiment.gatewayName = results[item].gateway.gatewayName;
 						experiment.projectName = results[item].project.projectName;
 						experiment.submittedDate = new Date(results[item].submittedDate).toLocaleString();
-						experiment.username = results[item].user.userName;
+						experiment.user = results[item].user.userName;
 						experiments.push(experiment);
 					}
 					return experiments;
@@ -258,18 +249,7 @@ angular.module("services",["config"]).
 					cache : true, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
-					var results = response.data.experimentDataList;
-					var experiments = [];
-					for (var item in results) {
-						var experiment = {};
-						experiment.id = results[item].experimentId;
-						experiment.template = results[item].workflowInstanceDataList[0].workflowInstance.templateName;
-						experiment.executionStatus = results[item].workflowInstanceDataList[0].workflowInstanceStatus.executionStatus;
-						experiment.updatedDate = new Date(results[item].workflowInstanceDataList[0].workflowInstanceStatus.statusUpdateTime).toLocaleString();
-						experiment.username = results[item].user;
-						experiments.push(experiment);
-					}
-					return experiments;
+					return response.data.experimentDataList;
 				}, function(error) {
 					console.log("Error occured while fetching experiments !");
 				});
@@ -291,15 +271,7 @@ angular.module("services",["config"]).
 				return $http({method:"GET", url:Server.getEndpoint()+"api/userwfregistry/get/workflows",
 					cache : true, withCredentials : true}).
 				then(function(response) {
-					var results = response.data.workflowList;
-					var workflows = [];
-					for (var item in results) {
-						var workflow = {};
-						workflow.graph = results[item].workflowGraph;
-						workflow.name = results[item].workflowName;
-						workflows.push(workflow);
-					}
-					return workflows;
+					return response.data.workflowList;
 				}, function(error) {
 					console.log("Error occured while fetching workflows !");
 				});

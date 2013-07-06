@@ -5,18 +5,14 @@
 		<tr>
 			<th>Experiment Id</th>
 			<th>Template</th>
-			<th>Execution Status</th>
-			<th>Status Updated Date</th>
 			<th>Run By</th>
 		</tr>
 		</thead>
 		<tbody>
 		<tr ng-repeat="experiment in experiments">
-			<td><a ng-href="#/experiments/id/{{experiment.id}}">{{experiment.id}}</a></td>
-			<td>{{experiment.template}}</td>
-			<td>{{experiment.executionStatus}}</td>
-			<td>{{experiment.updatedDate}}</td>
-			<td>{{experiment.username}}</td>
+			<td><a ng-href="#/experiments/id/{{experiment.experimentId}}">{{experiment.experimentId}}</a></td>
+			<td>{{experiment.workflowInstanceName}}</td>
+			<td>{{experiment.user}}</td>
 		</tr>
 		</tbody>
 	</table>
