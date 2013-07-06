@@ -23,6 +23,20 @@ app.directive("adminboard", function() {
 		transclude : true,
 		scope : {},
 		controller : function($scope,$element,$location) {
+			$scope.backUrls = [];
+			$scope.fwdUrls = [];
+			$scope.goBack = function() {
+				$scope.fwdUrls.push($location.path());
+				$location.path($scope.backUrls.pop());
+			};
+			$scope.goFwd = function() {
+				$scope.backUrls.push($location.path());
+				$location.path($scope.fwdUrls.pop());
+			};
+			$scope.gotoUrl = function(url) {
+				$scope.backUrls.push($location.path());
+				$location.path(url);
+			};
 			$scope.showSearch = function() {
 				$scope.showSearchPane = true;
 			};
@@ -53,8 +67,7 @@ app.directive("adminboard", function() {
 					break;
 				}
 				searchUrl += "/"+searchText;
-				console.log(searchUrl);
-				$location.path(searchUrl);
+				$scope.gotoUrl(searchUrl);
 			};
 		},
 		template : 
@@ -62,12 +75,18 @@ app.directive("adminboard", function() {
 				'<button class="btn" href="#dashboard" role="button" data-toggle="modal">Debug</button>' +
 				'<div id="dashboard" class="dashboard-overlay hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">' +
 					'<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>' +
-					'<h4 >Airavata Dashboard</h4>' +
+					'<div class="row">' +
+					'<div class="span2 title">Airavata Dashboard </div>' +
+					'<div class="span2 navbtn">' +
+					'<button class="btn" ng-click="goBack()" ng-disabled="backUrls.length<1"><i class="icon-arrow-left"></i></button> ' +
+					'<button class="btn" ng-click="goFwd()" ng-disabled="fwdUrls.length<1"><i class="icon-arrow-right"></i></button>' +
+					'</div>' +
+					'</div>' +
 					'<ul class="nav nav-tabs">' +
-					'<li><a href="#/" data-toggle="tab">Credentials</a></li>' +
-					'<li><a href="#/experiments" data-toggle="tab">Experiments</a></li>' +
-					'<li><a href="#/projects" data-toggle="tab">Projects</a></li>' +
-					'<li><a href="#/workflows" data-toggle="tab">Workflows</a></li>' +
+					'<li><a ng-click="gotoUrl(\'/\')" data-toggle="tab">Credentials</a></li>' +
+					'<li><a ng-click="gotoUrl(\'/experiments\')" data-toggle="tab">Experiments</a></li>' +
+					'<li><a ng-click="gotoUrl(\'/projects\')" data-toggle="tab">Projects</a></li>' +
+					'<li><a ng-click="gotoUrl(\'/workflows\')" data-toggle="tab">Workflows</a></li>' +
 					'<li class="pull-right"><a ng-click="showSearch()" data-toggle="tab">Search</a></li>' +
 					'</ul>' +
 					'<div class="row-fluid">' +
@@ -329,7 +348,6 @@ factory("User",["$http","Base64","Server", function($http,Base64,Server) {
 			return $http({method:"GET", url:Server.getEndpoint()+"api/userregistry/get/user/all",
 				cache : false, withCredentials : true}).
 			then(function(response) {
-				console.log(response);
 				return response.data.userList;
 			}, function(error) {
 				console.log("Error occured while fetching list of users");
