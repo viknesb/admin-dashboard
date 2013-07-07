@@ -10,7 +10,7 @@
 		</thead>
 		<tbody>
 		<tr ng-repeat="experiment in experiments">
-			<td><a ng-href="#/experiments/id/{{experiment.experimentId}}">{{experiment.experimentId}}</a></td>
+			<td><a ng-click="gotoUrl('/experiments/id/'+experiment.experimentId)">{{experiment.experimentId}}</a></td>
 			<td>{{experiment.workflowInstanceName}}</td>
 			<td>{{experiment.user}}</td>
 		</tr>

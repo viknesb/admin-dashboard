@@ -8,10 +8,10 @@
 		</thead>
 		<tbody>
 		<tr ng-repeat="user in users">
-			<td><a ng-href="#/experiments/user/{{user.userName}}">{{user.userName}}</a></td>
+			<td><a ng-click="gotoUrl('/experiments/user/'+user.userName)">{{user.userName}}</a></td>
 		</tr>
 		</tbody>
 	</table>
 	<br>
-	<a href="#/experiments/all">Click here</a> to list <strong>all experiments</strong>
+	<a ng-click="gotoUrl('/experiments/all')">Click here</a> to list <strong>all experiments</strong>
 </div>

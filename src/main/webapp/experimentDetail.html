@@ -28,7 +28,7 @@
 					<tr>
 						<td>Workflow Status</td>
 						<td>{{workflow.workflowInstanceStatus.executionStatus}} 
-							<a ng-href="#experiments/errors/{{experiment.experimentId}}/workflow/{{workflow.workflowInstance.workflowExecutionId}}" ng-show="workflow.workflowInstanceStatus.executionStatus=='FAILED'">(Get error details)</a></td>
+							<a ng-click="gotoUrl('/experiments/errors/'+experiment.experimentId+'/workflow/'+workflow.workflowInstance.workflowExecutionId)" ng-show="workflow.workflowInstanceStatus.executionStatus=='FAILED'">(Get error details)</a></td>
 					</tr>
 					<tr>
 						<td>Status Update Time</td>

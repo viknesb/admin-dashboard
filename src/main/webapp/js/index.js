@@ -83,11 +83,11 @@ app.directive("adminboard", function() {
 					'</div>' +
 					'</div>' +
 					'<ul class="nav nav-tabs">' +
-					'<li><a ng-click="gotoUrl(\'/\')" data-toggle="tab">Credentials</a></li>' +
-					'<li><a ng-click="gotoUrl(\'/experiments\')" data-toggle="tab">Experiments</a></li>' +
-					'<li><a ng-click="gotoUrl(\'/projects\')" data-toggle="tab">Projects</a></li>' +
-					'<li><a ng-click="gotoUrl(\'/workflows\')" data-toggle="tab">Workflows</a></li>' +
-					'<li class="pull-right"><a ng-click="showSearch()" data-toggle="tab">Search</a></li>' +
+					'<li><a ng-click="gotoUrl(\'/\')">Credentials</a></li>' +
+					'<li><a ng-click="gotoUrl(\'/experiments\')">Experiments</a></li>' +
+					'<li><a ng-click="gotoUrl(\'/projects\')">Projects</a></li>' +
+					'<li><a ng-click="gotoUrl(\'/workflows\')">Workflows</a></li>' +
+					'<li class="pull-right"><a ng-click="showSearch()">Search</a></li>' +
 					'</ul>' +
 					'<div class="row-fluid">' +
 					'<div ng-class="{span10:showSearchPane, span12:!showSearchPane}"><div ng-view></div></div>' +
@@ -105,8 +105,10 @@ app.directive("adminboard", function() {
 angular.module("controllers",["config","services"]).
 	controller("LoginCtrl", ["$scope","User","Server",function($scope,User,Server) {
 		$scope.save = function() {
-			Server.setEndpoint($scope.url);
-			User.login($scope.username,$scope.password).then(function(success) {
+			//Server.setEndpoint($scope.url);
+			Server.setEndpoint("http://localhost:8080/airavata-registry");
+			//User.login($scope.username,$scope.password).then(function(success) {
+			User.login("admin","admin").then(function(success) {
 				if(success) {
 					$scope.crdSetFlag = true;
 				}
