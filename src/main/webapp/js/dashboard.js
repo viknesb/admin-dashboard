@@ -288,7 +288,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getByUser : function(username) {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment/user?username=admin",
+				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment/user?username="+username,
 					cache : true, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
