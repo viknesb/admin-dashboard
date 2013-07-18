@@ -250,7 +250,7 @@ angular.module("controllers",["config","services"]).
 	}]);
 
 // Services
-angular.module("services",["config","util"]).
+angular.module("services",["config"]).
 	factory("Project",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
@@ -264,7 +264,7 @@ angular.module("services",["config","util"]).
 			}
 		};
 	}]).
-	factory("Experiment",["$http","User","Server","Utils", function($http, User, Server, Utils) {
+	factory("Experiment",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
 				return $http({method:"GET", url:Server.getEndpoint()+"api/experimentregistry/get/experiments/all",
