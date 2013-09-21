@@ -121,7 +121,7 @@ app.directive("adminboard", function() {
 					'</div>' +
 					'</div>' +
 					'<ul class="nav nav-tabs">' +
-					'<li><a ng-click="gotoUrl(\'/\')">Credentials</a></li>' +
+					'<li><a ng-click="gotoUrl(\'/\')">Login</a></li>' +
 					'<li><a ng-click="gotoUrl(\'/experiments\')">Experiments</a></li>' +
 					'<li><a ng-click="gotoUrl(\'/projects\')">Projects</a></li>' +
 					'<li><a ng-click="gotoUrl(\'/workflows\')">Workflows</a></li>' +
@@ -148,10 +148,10 @@ angular.module("controllers",["config","services"]).
 	}]).
 	controller("LoginCtrl", ["$scope","User","Server",function($scope,User,Server) {
 		$scope.save = function() {
-			//Server.setEndpoint($scope.url);
-			Server.setEndpoint("http://localhost:8080/airavata-registry");
-			//User.login($scope.username,$scope.password).then(function(success) {
-			User.login("admin","admin").then(function(success) {
+			Server.setEndpoint($scope.url);
+			//Server.setEndpoint("http://localhost:8080/airavata-registry");
+			User.login($scope.username,$scope.password).then(function(success) {
+			//User.login("admin","admin").then(function(success) {
 				if(success) {
 					$scope.crdSetFlag = true;
 				}
