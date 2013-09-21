@@ -32,7 +32,6 @@ app.config(['$httpProvider','$routeProvider' ,function($httpProvider, $routeProv
 	when('/experiments', {controller:'ExperimentCtrl', templateUrl:'users.html'}).
 	when('/projects', {controller:'ProjectCtrl', templateUrl:'projects.html'}).
 	when('/workflows', {controller:'WorkflowCtrl', templateUrl:'workflows.html'}).
-	//when('/credentials', {controller:'LoginCtrl', templateUrl:'credentials.html'}).
 	otherwise({redirectTo:'/'});
 }]);
 
