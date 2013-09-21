@@ -286,7 +286,7 @@ angular.module("services",["config"]).
 		return {
 			getAll : function() {
 				return $http({method:"GET", url:Server.getEndpoint()+"api/projectregistry/get/projects",
-					cache : true, withCredentials : true}).
+					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.workspaceProjects;
 				}, function(error) {
@@ -299,7 +299,7 @@ angular.module("services",["config"]).
 		return {
 			getAll : function() {
 				return $http({method:"GET", url:Server.getEndpoint()+"api/experimentregistry/get/experiments/all",
-					cache : true, withCredentials : true}).
+					cache : false, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
 					var results = response.data.experiments;
@@ -320,7 +320,7 @@ angular.module("services",["config"]).
 			},
 			getByUser : function(username) {
 				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment/user?username="+username,
-					cache : true, withCredentials : true}).
+					cache : false, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
 					return response.data.experimentDataList;
@@ -339,7 +339,7 @@ angular.module("services",["config"]).
 			},
 			search : function(searchQuery) {
 				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiments?"+searchQuery,
-					cache : true, withCredentials : true}).
+					cache : false, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
 					return response.data.experimentDataList;
@@ -353,7 +353,7 @@ angular.module("services",["config"]).
 		return {
 			getAll : function() {
 				return $http({method:"GET", url:Server.getEndpoint()+"api/userwfregistry/get/workflows",
-					cache : true, withCredentials : true}).
+					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.workflowList;
 				}, function(error) {
