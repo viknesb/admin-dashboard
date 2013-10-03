@@ -148,7 +148,7 @@ angular.module("controllers",["config","services"]).
 	controller("LoginCtrl", ["$scope","User","Server",function($scope,User,Server) {
 		$scope.save = function() {
 			Server.setEndpoint($scope.url);
-			//Server.setEndpoint("http://localhost:8080/airavata-registry");
+			//Server.setEndpoint("http://localhost:8080/airavata/services/registry");
 			User.login($scope.username,$scope.password).then(function(success) {
 			//User.login("admin","admin").then(function(success) {
 				if(success) {
@@ -284,7 +284,7 @@ angular.module("services",["config"]).
 	factory("Project",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/projectregistry/get/projects",
+				return $http({method:"GET", url:Server.getEndpoint()+"projectregistry/get/projects",
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.workspaceProjects;
@@ -297,7 +297,7 @@ angular.module("services",["config"]).
 	factory("Experiment",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/experimentregistry/get/experiments/all",
+				return $http({method:"GET", url:Server.getEndpoint()+"experimentregistry/get/experiments/all",
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
@@ -318,7 +318,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getByUser : function(username) {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment/user?username="+username,
+				return $http({method:"GET", url:Server.getEndpoint()+"provenanceregistry/get/experiment/user?username="+username,
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
@@ -328,7 +328,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getById : function(expId) {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiment?experimentId="+expId,
+				return $http({method:"GET", url:Server.getEndpoint()+"provenanceregistry/get/experiment?experimentId="+expId,
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data;
@@ -337,7 +337,7 @@ angular.module("services",["config"]).
 				});
 			},
 			search : function(searchQuery) {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/get/experiments?"+searchQuery,
+				return $http({method:"GET", url:Server.getEndpoint()+"provenanceregistry/get/experiments?"+searchQuery,
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					console.log(response);
@@ -351,7 +351,7 @@ angular.module("services",["config"]).
 	factory("Workflow",["$http","User","Server", function($http, User, Server) {
 		return {
 			getAll : function() {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/userwfregistry/get/workflows",
+				return $http({method:"GET", url:Server.getEndpoint()+"userwfregistry/get/workflows",
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.workflowList;
@@ -360,7 +360,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getWorkflowExecutionErrors : function(expId,workflowId) {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/workflow/errors?experimentId="+expId+"&workflowInstanceId="+workflowId,
+				return $http({method:"GET", url:Server.getEndpoint()+"provenanceregistry/workflow/errors?experimentId="+expId+"&workflowInstanceId="+workflowId,
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.workflowExecutionErrorList;
@@ -369,7 +369,7 @@ angular.module("services",["config"]).
 				});
 			},
 			getNodeExecutionErrors : function(expId,workflowId,nodeId) {
-				return $http({method:"GET", url:Server.getEndpoint()+"api/provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+workflowId+"&nodeId="+nodeId,
+				return $http({method:"GET", url:Server.getEndpoint()+"provenanceregistry/node/errors?experimentId="+expId+"&workflowInstanceId="+workflowId+"&nodeId="+nodeId,
 					cache : false, withCredentials : true}).
 				then(function(response) {
 					return response.data.nodeExecutionErrorList;
@@ -399,7 +399,7 @@ factory("User",["$http","Base64","Server", function($http,Base64,Server) {
 		login : function(username,password) {
 			_username = username;
 			$http.defaults.headers.common.Authorization = this.getAuthHeader(username,password);
-			return $http({method:"GET", url:Server.getEndpoint()+"api/congfigregistry/get/eventingservice/uri",
+			return $http({method:"GET", url:Server.getEndpoint()+"congfigregistry/get/eventingservice/uri",
 				cache : false}).
 			then(function(response) {
 				return true;
@@ -409,7 +409,7 @@ factory("User",["$http","Base64","Server", function($http,Base64,Server) {
 			});
 		},
 		getAll : function() {
-			return $http({method:"GET", url:Server.getEndpoint()+"api/userregistry/get/user/all",
+			return $http({method:"GET", url:Server.getEndpoint()+"userregistry/get/user/all",
 				cache : false, withCredentials : true}).
 			then(function(response) {
 				return response.data.userList;
